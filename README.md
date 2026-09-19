@@ -29,6 +29,31 @@ split, and how old the reading is. Click it to refresh immediately. With no read
 bar shows `…`; if the provider call fails it keeps the last good figure and reports the error
 in the card instead of going blank.
 
+## 中文速览
+
+一个 DeepSeek Harness Web 插件：在界面**最右侧贴边显示一根竖直的账户余额进度条**。
+
+- **红色**：余额 < 10 元
+- **黄色**：10 – 30 元
+- **绿色**：30 – 50 元
+- **浅蓝紫色波纹**：超过 50 元的部分——绿色填满到 50 元刻度，超出部分画成持续流动的波浪
+
+鼠标悬停显示精确金额、刻度百分比、充值/赠送拆分和读数新鲜度；点击立即刷新。每 60 秒自动
+更新一次，Host 侧还有 5 分钟的兜底刷新。
+
+**安装**（插件不在 npm 上，直接从仓库加载）：
+
+```sh
+git clone https://github.com/hfdsdfgr/123.git dsh-balance-bar
+# 方式一：单次启动时挂载
+dsh web --patch /绝对路径/dsh-balance-bar/cordis.patch.yml
+# 方式二：写进 profile 的补丁层（Web profile 会热重载，刷新页面即可生效）
+node scripts/install.mjs
+```
+
+API Key 走 Harness 的凭据体系（默认引用 `DEEPSEEK_API_KEY`），**永远不会进入浏览器**；浏览器
+只拿到一个同源 JSON 快照。阈值、刻度、波纹颜色、刷新间隔都是 `src/client.js` 顶部的具名常量。
+
 ## Highlights
 
 - **No build step.** The browser half is one plain CommonJS file wrapped in the client module
