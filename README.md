@@ -6,16 +6,19 @@ the GUI**, with colour bands that tell you how much runway you have left — and
 animated wave for whatever you hold above the healthy threshold.
 
 ```
-        ┌──┐
-        │≈≈│   ← balance > 50: light blue-violet waves, always moving
-        │≈≈│
-        │▓▓│
-        │▓▓│   ← 30 – 50: green
-        │▓▓│
-        │▓▓│   ← 10 – 30: yellow
-        └──┘   ← < 10: red
-         ¥10.06
+         ┌──┐
+         │≈≈│   ← balance > 50: light blue-violet waves, always moving
+         │≈≈│
+         │▓▓│
+         │▓▓│   ← 30 – 50: green
+         │▓▓│
+         │▓▓│   ← 10 – 30: yellow
+         └──┘   ← < 10: red
+   ¥10.06 ╯
 ```
+
+The bar itself stays vertical; the amount is a **horizontal** chip pinned to its left, so
+`¥1234.56` reads normally instead of stacking one digit per line.
 
 | Balance (CNY) | Fill |
 |---|---|
@@ -24,10 +27,10 @@ animated wave for whatever you hold above the healthy threshold.
 | `30 – 50` | **green** |
 | `> 50` | **green** pinned at the 50 scale mark, and every yuan above it is drawn as an animated light blue-violet wave layer |
 
-Hover the bar for a card with the exact amount, the scale position, the topped-up / granted
-split, and how old the reading is. Click it to refresh immediately. With no reading yet the
-bar shows `…`; if the provider call fails it keeps the last good figure and reports the error
-in the card instead of going blank.
+Hover the bar (or the chip) for a card with the exact amount, the scale position, the
+topped-up / granted split, and how old the reading is. Click to refresh immediately. With no
+reading yet the chip shows `读取中…`; if the provider call fails it keeps the last good figure
+and reports the error in the card instead of going blank.
 
 ## 中文速览
 
@@ -38,8 +41,9 @@ in the card instead of going blank.
 - **绿色**：30 – 50 元
 - **浅蓝紫色波纹**：超过 50 元的部分——绿色填满到 50 元刻度，超出部分画成持续流动的波浪
 
-鼠标悬停显示精确金额、刻度百分比、充值/赠送拆分和读数新鲜度；点击立即刷新。每 60 秒自动
-更新一次，Host 侧还有 5 分钟的兜底刷新。
+进度条本身保持竖直，**数字是横向显示的**：金额做成一个横向胶囊标签贴在竖条左侧，所以
+`¥1234.56` 正常一行读完，不会竖排。鼠标悬停竖条或标签都会弹出卡片，显示精确金额、刻度百分比、
+充值/赠送拆分和读数新鲜度；点击立即刷新。每 60 秒自动更新一次，Host 侧还有 5 分钟的兜底刷新。
 
 **安装**（插件不在 npm 上，直接从仓库加载）：
 
@@ -142,21 +146,32 @@ this plugin unloads.
 
 ## Tests
 
-Three checks, plain Node, no test framework:
+Four checks, plain Node, no test framework:
 
 ```sh
 node scripts/client-spec.mjs      # colour bands, scale, wave geometry, payload projection
 node scripts/client-smoke.mjs     # loads the bundle through a stubbed window.__ModuleLoader__
+node scripts/theme-tokens.mjs     # every var(--dsw-*) reference resolves in the real theme
 node scripts/balance-smoke.mjs    # mounts the Host half and drives the live provider
 node scripts/verify-deployed.mjs  # read-only probe of a running GUI
 ```
 
 `client-spec` pins the product rule at its boundaries — `10` is yellow, `30` is green, `50` is
 still green, anything above turns the wave on — and proves the wave path closes its phase, so
-the animation loops without a visible jump. `verify-deployed` mints the browser-session cookie,
-reads `window.__DSH_BOOT__` from the served index, and downloads the bundle route the browser
-will actually use: it is the difference between "the files are correct" and "the GUI is running
-them".
+the animation loops without a visible jump.
+
+`theme-tokens` exists because a CSS custom property that does not exist **fails silently**: the
+declaration is dropped and the hardcoded fallback paints instead, which looks like a design
+choice rather than a bug. This plugin's hover card shipped that way once — four references
+(`--dsw-alias-bg-elevated`, `--dsw-alias-text-primary`, `--dsw-alias-text-secondary`,
+`--dsw-alias-border-subtle`) were never defined by `ui-theme`, so the card rendered with a
+washed-out hardcoded grey that read as permanently half-transparent. The check extracts the
+stylesheet the bundle actually installs, compares every `--dsw-*` reference against the names
+`ui-theme` declares in the DSH checkout, and also asserts the value chip is horizontal.
+
+`verify-deployed` mints the browser-session cookie, reads `window.__DSH_BOOT__` from the served
+index, and downloads the bundle route the browser will actually use: it is the difference
+between "the files are correct" and "the GUI is running them".
 
 ## Tuning the look
 
@@ -172,8 +187,12 @@ Thresholds, scale, wave colours, and refresh cadence are named constants at the 
 | `PALETTE` | red / yellow / green gradients | Fill colours |
 | `WAVE_CREST`, `WAVE_BODY` | `#cddcff`, `#8fb0ff` | The light blue-violet wave |
 
-Layout lives in the `STYLES` block in the same file: `right: 12px`, 16 px wide, widening on
-hover.
+Layout lives in the `STYLES` block in the same file: the vertical bar is 16 px wide at
+`right: 12px`, and the horizontal value chip is pinned to its left at `right: 34px`, both
+widening/shifting slightly on hover. Colours come from the theme's semantic tokens
+(`--dsw-alias-label-*`, `--dsw-alias-bg-layer-1`, `--dsw-elevation-*`) so the plugin follows
+light and dark mode; the band colours are literal, because they are the product rule rather
+than the theme's.
 
 ## License
 
