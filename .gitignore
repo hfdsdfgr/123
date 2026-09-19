@@ -1,0 +1,12 @@
+# Local scratch: DSH writes temporary files here during a run.
+.tmp/
+
+# Build/runtime leftovers; this plugin has no build step, but keep the door shut.
+node_modules/
+lib/
+*.log
+
+# Never commit credentials.
+githubtoken.txt
+*.token
+.env
