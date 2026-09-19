@@ -76,7 +76,11 @@ for (const marker of ['__ModuleLoader__.load', "id: 'dsh-balance-bar'", 'shell.o
   if (!bundle.includes(marker)) throw new Error(`served bundle is missing ${marker}`)
 }
 
-const mapResponse = await fetch(new URL(`${entry.url.split('?')[0]}.map${entry.url.includes('?') ? '?' + entry.url.split('?')[1] : ''}`, base), { headers: { cookie } })
-console.log(`[verify] bundle map: HTTP ${mapResponse.status}`)
+// A source map is optional: this plugin ships no build step, so the browser
+// debugger falls back to the raw source. Its absence is not a deployment fault.
+const mapUrl = new URL(entry.url, base)
+mapUrl.pathname = `${mapUrl.pathname}.map`
+const mapResponse = await fetch(mapUrl, { headers: { cookie } })
+console.log(`[verify] bundle map: HTTP ${mapResponse.status}${mapResponse.ok ? '' : ' (optional; raw source is served as-is)'}`)
 
 console.log('[verify] OK — the GUI is serving this plugin')
