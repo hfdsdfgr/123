@@ -1,0 +1,27 @@
+# DSH loader overlay for the balance bar.
+#
+# Apply it as a launcher layer:
+#   dsh web --patch D:/vibecoding/dshplugins/dsh-balance-bar/cordis.patch.yml
+#
+# ...or append this one row to your profile's own patch layer
+# (`$DSH_HOME/profiles/<name>/cordis.patch.yml`), which reloads live.
+#
+# The row names the Host half by absolute file URL, so the plugin needs no
+# install step: the loader's own resolver locates `src/index.ts`, and the
+# nearest `package.json` is what lets the client-module scanner see the
+# `dsh.client` declaration and serve `src/client.js` as the browser bundle.
+
+- insert:
+    - id: balance-bar
+      name: 'file:///D:/vibecoding/dshplugins/dsh-balance-bar/src/index.ts'
+      config:
+        # Credential reference holding the provider API key.
+        credentialRef: DEEPSEEK_API_KEY
+        # Balance endpoint (any DeepSeek-compatible `/user/balance` works).
+        endpoint: https://api.deepseek.com/user/balance
+        # Serve a fresh reading for this long before calling the provider again.
+        cacheTtlMs: 60000
+        # Background refresh cadence.
+        pollIntervalMs: 300000
+        # Per-request timeout.
+        timeoutMs: 10000
