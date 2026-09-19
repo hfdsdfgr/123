@@ -92,8 +92,8 @@ window.__ModuleLoader__.load({
   box-shadow: 0 1px 2px rgb(0 0 0 / 18%), inset 0 0 0 0.5px rgb(127 127 127 / 22%);
   transition: width 180ms ease, right 180ms ease;
 }
-.dsh-balance-bar:hover,
-.dsh-balance-bar[data-open='true'] {
+.dsh-balance-root[data-open='true'] .dsh-balance-bar,
+.dsh-balance-bar:hover {
   width: 22px;
   right: 9px;
 }
@@ -151,33 +151,45 @@ window.__ModuleLoader__.load({
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-.dsh-balance-value {
+.dsh-balance-label {
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: 10px;
+  top: 50%;
+  right: 34px;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: .06em;
-  color: var(--dsw-alias-text-secondary, #6b6b6b);
-  text-shadow: 0 0 2px color-mix(in srgb, var(--dsw-alias-bg-base, #fff) 70%, transparent);
+  line-height: 16px;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-primary, #1b1b1b);
+  background: var(--dsw-alias-bg-layer-1, #ffffff);
+  border-radius: 999px;
+  padding: 4px 9px;
+  box-shadow: var(--dsw-elevation-panel, 0 2px 8px rgb(0 0 0 / 18%));
+  transition: right 180ms ease;
 }
+.dsh-balance-root[data-open='true'] .dsh-balance-label {
+  right: 31px;
+}
+.dsh-balance-root[data-tone='red'] .dsh-balance-label { color: #d92b2b; }
+.dsh-balance-root[data-tone='yellow'] .dsh-balance-label { color: #b06f00; }
+.dsh-balance-root[data-tone='green'] .dsh-balance-label { color: #0f7a4a; }
+.dsh-balance-root[data-tone='unknown'] .dsh-balance-label { color: var(--dsw-alias-label-secondary, #4a4a4a); }
 .dsh-balance-card {
   position: fixed;
-  right: 44px;
+  right: 76px;
   top: 50%;
   transform: translateY(-50%);
-  min-width: 148px;
+  min-width: 150px;
   padding: 10px 12px;
   border-radius: 12px;
   border: 0;
-  background: var(--dsw-alias-bg-elevated, var(--dsw-alias-bg-base, #fff));
-  box-shadow: 0 8px 28px rgb(0 0 0 / 22%);
-  color: var(--dsw-alias-text-primary, #1b1b1b);
+  background: var(--dsw-alias-bg-layer-1, #ffffff);
+  box-shadow: var(--dsw-elevation-prominent, 0 8px 28px rgb(0 0 0 / 22%));
+  color: var(--dsw-alias-label-primary, #1b1b1b);
   font-size: 12px;
   line-height: 18px;
   pointer-events: none;
@@ -186,7 +198,7 @@ window.__ModuleLoader__.load({
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .04em;
-  opacity: .62;
+  color: var(--dsw-alias-label-secondary, #4a4a4a);
   margin-bottom: 4px;
 }
 .dsh-balance-card-value {
@@ -194,28 +206,32 @@ window.__ModuleLoader__.load({
   line-height: 24px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-primary, #1b1b1b);
 }
 .dsh-balance-card-row {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  opacity: .78;
+  color: var(--dsw-alias-label-secondary, #4a4a4a);
   font-variant-numeric: tabular-nums;
 }
 .dsh-balance-card-note {
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 0.5px solid var(--dsw-alias-border-subtle, rgb(127 127 127 / 30%));
+  border-top: 0.5px solid var(--dsw-alias-border-l2, rgb(127 127 127 / 30%));
   font-size: 11px;
-  opacity: .72;
+  color: var(--dsw-alias-label-tertiary, #5c5c5c);
 }
-.dsh-balance-card-note[data-error='true'] { color: #e5484d; opacity: .95; }
+.dsh-balance-card-note[data-error='true'] { color: var(--dsw-alias-state-error-primary, #d92b2b); }
 @media (max-width: 860px) {
   .dsh-balance-bar { right: 6px; width: 12px; }
   .dsh-balance-bar:hover { width: 16px; right: 4px; }
+  .dsh-balance-label { right: 26px; }
+  .dsh-balance-card { right: 64px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .dsh-balance-bar,
+  .dsh-balance-label,
   .dsh-balance-fill { transition: none; }
   .dsh-balance-wave { animation: none; }
 }
@@ -405,37 +421,52 @@ window.__ModuleLoader__.load({
         }))
         : null
 
-      const bar = React.createElement('div', { className: 'dsh-balance-root' },
-        React.createElement('div', {
-          className: 'dsh-balance-bar',
-          'data-tone': tone,
-          'data-open': open ? 'true' : undefined,
-          role: 'progressbar',
-          tabIndex: 0,
-          'aria-label': known ? '账户余额 ¥' + formatAmount(total) : '账户余额读取中',
-          'aria-valuemin': 0,
-          'aria-valuemax': SCALE_LIMIT,
-          'aria-valuenow': known ? Math.min(total, SCALE_LIMIT) : undefined,
-          onMouseEnter: () => { setOpen(true); setNow(Date.now()) },
-          onMouseLeave: () => { setOpen(false) },
-          onFocus: () => { setOpen(true); setNow(Date.now()) },
-          onBlur: () => { setOpen(false) },
-          onClick: activate,
-          onKeyDown: (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault()
-              activate()
-            }
-          },
+      // Hover/focus belongs to the whole overlay cell, so the bar and the
+      // horizontal value chip light up together and the card survives the
+      // pointer travelling from the bar to the chip.
+      const hover = {
+        onMouseEnter: () => { setOpen(true); setNow(Date.now()) },
+        onMouseLeave: () => { setOpen(false) },
+        onFocus: () => { setOpen(true); setNow(Date.now()) },
+        onBlur: () => { setOpen(false) },
+      }
+      const keys = {
+        onKeyDown: (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            activate()
+          }
         },
-        React.createElement('div', {
-          className: 'dsh-balance-fill',
-          'data-tone': tone,
-          style: { height: (ratio * 100).toFixed(2) + '%' },
-        }),
-        wave,
-        React.createElement('div', { className: 'dsh-balance-value' },
-          known ? '¥' + formatAmount(total) : stale ? '!' : '…')))
+      }
+
+      const bar = React.createElement('div', {
+        className: 'dsh-balance-root',
+        'data-tone': tone,
+        'data-open': open ? 'true' : undefined,
+        ...hover,
+      },
+      React.createElement('div', {
+        className: 'dsh-balance-bar',
+        role: 'progressbar',
+        tabIndex: 0,
+        'aria-label': known ? '账户余额 ¥' + formatAmount(total) : '账户余额读取中',
+        'aria-valuemin': 0,
+        'aria-valuemax': SCALE_LIMIT,
+        'aria-valuenow': known ? Math.min(total, SCALE_LIMIT) : undefined,
+        onClick: activate,
+        ...keys,
+      },
+      React.createElement('div', {
+        className: 'dsh-balance-fill',
+        'data-tone': tone,
+        style: { height: (ratio * 100).toFixed(2) + '%' },
+      }),
+      wave),
+      React.createElement('div', {
+        className: 'dsh-balance-label',
+        onClick: activate,
+        ...keys,
+      }, known ? '¥' + formatAmount(total) : stale ? '余额读取失败' : '读取中…'))
 
       const card = open
         ? React.createElement('div', { className: 'dsh-balance-card', role: 'status' },
